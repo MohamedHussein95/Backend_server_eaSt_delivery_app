@@ -14,6 +14,6 @@ app.use('/api/auth', require('./routes/auth'));
 connectDB();
 
 app.get('/', (req, res) => {
-	res.status(200).send('get something');
+	res.status(200).send('eaSt Server is running');
 });
 app.listen(port, () => console.log(`server is listening on port:${port}`));
