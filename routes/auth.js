@@ -1,7 +1,7 @@
 const express = require('express');
 const { Router } = express;
 const { body, validationResult } = require('express-validator');
-const User = require('../models/user');
+const User = require('../models/User');
 const { hashPassword, comparePasswords } = require('../helpers/auth');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv').config();
