@@ -10,6 +10,7 @@ const UserSchema = mongoose.Schema(
 			type: String,
 			required: true,
 			unique: true,
+			lowercase: true,
 		},
 		phoneNumber: {
 			type: String,
@@ -29,6 +30,6 @@ const UserSchema = mongoose.Schema(
 	}
 );
 
-const User = mongoose.model('user', UserSchema);
+const User = mongoose.model('User', UserSchema);
 
 module.exports = User;

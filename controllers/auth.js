@@ -56,9 +56,7 @@ const login = async (req, res) => {
 		const { email, password } = req.body;
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res
-				.status(400)
-				.json({ errors: [{ msg: "User doesn't exist" }] });
+			return res.status(404).json({ errors: [{ msg: 'No user found!' }] });
 		}
 
 		const passwordsMatch = await comparePasswords(password, user.password);
@@ -77,13 +75,20 @@ const login = async (req, res) => {
 		res.status(500).send('Server Error');
 	}
 };
-const getUserInfo = async (req, res) => {
+const getUser = async (req, res) => {
 	try {
+		if (req.params.id !== req.user.id) {
+			return res.status(401).json({ errors: [{ msg: 'Not Authorized!' }] });
+		}
+
 		let user = await User.findById(req.user.id).select(
 			'-password -resetCode'
 		);
 		res.json(user);
 	} catch (error) {
+		if (error.kind === 'ObjectId') {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
 		console.error(error.message);
 		res.status(500).send('Server Error');
 	}
@@ -99,9 +104,7 @@ const forgotPassword = async (req, res) => {
 
 		let user = await User.findOne({ email });
 		if (!user) {
-			return res.status(400).json({
-				errors: [{ msg: 'user not found!' }],
-			});
+			return res.status(404).json({ errors: [{ msg: 'No user found!' }] });
 		}
 
 		try {
@@ -173,11 +176,14 @@ const resetPassword = async (req, res) => {
 		res.status(500).send('Server Error');
 	}
 };
-const downloadUserInfo = async (req, res) => {
+const downloadUser = async (req, res) => {
 	try {
+		if (req.params.id !== req.user.id) {
+			return res.status(401).json({ errors: [{ msg: 'Not Authorized!' }] });
+		}
 		const user = await User.findById(req.params.id);
 		if (!user) {
-			return res.status(400).json({ errors: [{ msg: 'No User found' }] });
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
 		}
 		const fileName = user.name;
 		// convert the user's information to a text file
@@ -191,8 +197,114 @@ const downloadUserInfo = async (req, res) => {
 		// send the file to the client
 		res.status(200).send(textData);
 	} catch (error) {
-		res.status(400).json({
+		if (error.kind === 'ObjectId') {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+		res.status(500).json({
 			errors: [{ msg: `Failed to Download ${error.message}` }],
+		});
+	}
+};
+const deleteUser = async (req, res) => {
+	try {
+		if (req.params.id !== req.user.id) {
+			return res.status(401).json({ errors: [{ msg: 'Not Authorized!' }] });
+		}
+		const user = await User.findByIdAndDelete(req.params.id);
+		if (!user) {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+		res.json({ id: req.params.id });
+	} catch (error) {
+		if (error.kind === 'ObjectId') {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+		res.status(500).json({
+			errors: [{ msg: `Failed to delete ` }],
+		});
+	}
+};
+const updateUser = async (req, res) => {
+	try {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		// Check if the authenticated user is authorized to update the user
+		if (req.params.id !== req.user.id) {
+			return res.status(401).json({ errors: [{ msg: 'Not Authorized!' }] });
+		}
+
+		// Get the updated user information from the request body
+		const { name, email, phoneNumber } = req.body;
+
+		// Find the user by ID
+		const user = await User.findById(req.params.id);
+		if (!user) {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+
+		// Update the user information
+		user.name = name;
+		user.email = email;
+		user.phoneNumber = phoneNumber;
+
+		// Save the updated user information to the database
+		await user.save();
+
+		// Return the updated user information
+		const { password: _, resetCode, ...rest } = user._doc;
+		return res.json({ user: rest });
+	} catch (error) {
+		if (error.kind === 'ObjectId') {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+		res.status(500).json({
+			errors: [{ msg: `Failed to update` }],
+		});
+	}
+};
+const updatePassword = async (req, res) => {
+	try {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		// Check if the authenticated user is authorized to update the user
+		if (req.params.id !== req.user.id) {
+			return res.status(401).json({ errors: [{ msg: 'Not Authorized!' }] });
+		}
+
+		// Get the updated user information from the request body
+		const { password, new_password } = req.body;
+
+		// Find the user by ID
+		const user = await User.findById(req.params.id);
+		if (!user) {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+		//check if old pass is correct
+		const passwordsMatch = await comparePasswords(password, user.password);
+		if (!passwordsMatch) {
+			return res.status(400).json({ errors: [{ msg: 'Invalid Password' }] });
+		}
+
+		// Check if the password is being updated
+		if (new_password) {
+			const hashedPassword = await hashPassword(new_password);
+			user.password = hashedPassword;
+		}
+		// Save the updated user information to the database
+		await user.save();
+		// Return the updated user information
+		const { password: _, resetCode, ...rest } = user._doc;
+		return res.json({ user: rest });
+	} catch (error) {
+		if (error.kind === 'ObjectId') {
+			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
+		}
+		res.status(500).json({
+			errors: [{ msg: `Failed to update` }],
 		});
 	}
 };
@@ -200,8 +312,11 @@ const downloadUserInfo = async (req, res) => {
 module.exports = {
 	register,
 	login,
-	getUserInfo,
+	getUser,
 	forgotPassword,
 	resetPassword,
-	downloadUserInfo,
+	downloadUser,
+	deleteUser,
+	updateUser,
+	updatePassword,
 };
