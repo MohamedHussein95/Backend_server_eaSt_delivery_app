@@ -127,7 +127,7 @@ const forgotPassword = async (req, res) => {
 				to: email, // list of receivers
 				subject: 'Your eaSt Password Reset Code', // Subject line
 				html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Your eaSt Password Reset Code</title>    <style>/* Add your own CSS styles here */body {font-family: Arial,sans-serif;background-color: #f0f0f0;}.container {max-width:600px; margin: 0 auto;background-color: #ffffff;padding: 20px; border-radius: 10px;}.logo {display: block; margin: 0 auto;width: 100px; height: 100px;}.logoText{	display: block;margin: 0 auto;font-size: 72px;font-weight: bold;color: #F05600;text-align: center;	text-shadow: 2px 2px #F05600;}.reset-code {font-size: 36px;font-weight: bold;color:#ff0000;           text-align: center;}.instructions {font-size: 16px;line-height: 1.5;color: #333333; }</style></head><body>
-					<div class="container"><h1 class="logoText">eaSt</h1><h1>Forgot Password</h1>  <p class="instructions">You have requested to reset your password for your eaSt account. Please use the following code to verify your identity and create a new password.</p><p class="reset-code">${resetCode}</p><p class="instructions">If you did not request a password reset, please ignore this email or contact our support team if you have any questions.</p> </div></body></html>`, // html body
+					<div class="container"><image src = '.././public/logo.png' alt ="eaSt logo" /><h1 class="logoText">eaSt</h1><h1>Forgot Password</h1>  <p class="instructions">You have requested to reset your password for your eaSt account. Please use the following code to verify your identity and create a new password.</p><p class="reset-code">${resetCode}</p><p class="instructions">If you did not request a password reset, please ignore this email or contact our support team if you have any questions.</p> </div></body></html>`, // html body
 			});
 
 			console.log('Message sent: %s', info.messageId);
@@ -173,5 +173,35 @@ const resetCode = async (req, res) => {
 		res.status(500).send('Server Error');
 	}
 };
+const downloadUserInfo = async (req, res) => {
+	try {
+		const user = await User.findById(req.params.id);
+		if (!user) {
+			return res.status(400).json({ errors: [{ msg: 'No User found' }] });
+		}
+		const fileName = user.name;
+		// convert the user's information to a text file
+		const textData = `${user}`;
+		// set the response headers to indicate that we are sending a file
+		res.setHeader(
+			'Content-disposition',
+			`attachment; filename=${fileName}.txt`
+		);
+		res.set('Content-Type', 'text/plain');
+		// send the file to the client
+		res.status(200).send(textData);
+	} catch (error) {
+		res.status(400).json({
+			errors: [{ msg: `Failed to Download ${error.message}` }],
+		});
+	}
+};
 
-module.exports = { register, login, getUserInfo, forgotPassword, resetCode };
+module.exports = {
+	register,
+	login,
+	getUserInfo,
+	forgotPassword,
+	resetCode,
+	downloadUserInfo,
+};

@@ -8,6 +8,7 @@ const {
 	getUserInfo,
 	forgotPassword,
 	resetCode,
+	downloadUserInfo,
 } = require('../controllers/auth');
 
 const router = Router();
@@ -49,5 +50,6 @@ router.post(
 	resetCode
 );
 router.get('/me', auth, getUserInfo);
+router.get('/me/download/:id', downloadUserInfo);
 
 module.exports = router;
