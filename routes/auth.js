@@ -7,8 +7,8 @@ const {
 	login,
 	getUserInfo,
 	forgotPassword,
-	resetCode,
 	downloadUserInfo,
+	resetPassword,
 } = require('../controllers/auth');
 
 const router = Router();
@@ -47,7 +47,7 @@ router.post(
 			.isLength({ min: 6 })
 			.withMessage('Password must be at least 6 characters long'),
 	],
-	resetCode
+	resetPassword
 );
 router.get('/me', auth, getUserInfo);
 router.get('/me/download/:id', downloadUserInfo);

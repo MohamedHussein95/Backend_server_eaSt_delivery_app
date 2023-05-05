@@ -142,7 +142,7 @@ const forgotPassword = async (req, res) => {
 		res.status(500).send('Server Error');
 	}
 };
-const resetCode = async (req, res) => {
+const resetPassword = async (req, res) => {
 	try {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -202,6 +202,6 @@ module.exports = {
 	login,
 	getUserInfo,
 	forgotPassword,
-	resetCode,
+	resetPassword,
 	downloadUserInfo,
 };
