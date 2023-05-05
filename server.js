@@ -5,7 +5,7 @@ const connectDB = require('./config/db');
 
 const app = express();
 const port = process.env.PORT || 8001;
-const host = process.env.HOST || 'http://localhost';
+//const host = process.env.HOST || 'http://localhost';
 
 app.use(express.json({ extended: false }));
 app.use(express.urlencoded({ extended: false }));
@@ -18,6 +18,4 @@ app.get('/', (req, res) => {
 
 connectDB();
 
-app.listen(port, host, () =>
-	console.log(`server is listening on port:${port} on host:${host}`)
-);
+app.listen(port, () => console.log(`server is listening on port:${port} `));
