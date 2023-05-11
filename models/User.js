@@ -23,6 +23,20 @@ const UserSchema = mongoose.Schema(
 		avatar: {
 			type: String,
 		},
+		cloudinary_id: {
+			type: String,
+		},
+		emailVerified: {
+			type: Boolean,
+			default: false,
+		},
+		phoneNumberVerified: {
+			type: Boolean,
+			default: false,
+		},
+		verificationToken: {
+			type: String,
+		},
 		resetCode: { type: String },
 	},
 	{

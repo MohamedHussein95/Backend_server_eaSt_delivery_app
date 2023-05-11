@@ -1,17 +1,23 @@
+const upload = require('../utils/multer');
 const express = require('express');
 const { Router } = express;
 const { body } = require('express-validator');
 const auth = require('../middlewares/auth');
+
 const {
 	register,
 	login,
-	getUser,
 	forgotPassword,
-	downloadUser,
 	resetPassword,
+	updatePassword,
+	uploadProfile,
+	verifyEmail,
+	requestEmailVerification,
+	getUser,
+	downloadUser,
 	deleteUser,
 	updateUser,
-	updatePassword,
+	downloadProfile,
 } = require('../controllers/auth');
 
 const router = Router();
@@ -53,23 +59,8 @@ router.post(
 	resetPassword
 );
 
-router.get('/me', auth, getUser);
-router.post('/me/download/:id', auth, downloadUser);
-router.delete('/me/delete/:id', auth, deleteUser);
 router.put(
-	'/me/update/:id',
-	[
-		[
-			body('name').notEmpty().withMessage('Name is required'),
-			body('email').notEmpty().withMessage('Email is required'),
-			body('phoneNumber').notEmpty().withMessage('Phone Number is required'),
-		],
-		auth,
-	],
-	updateUser
-);
-router.put(
-	'/me/update_password/:id',
+	'/update_password/:id',
 	[
 		[
 			body('password').exists().withMessage('Password is required'),
@@ -81,5 +72,16 @@ router.put(
 	],
 	updatePassword
 );
-
+router.post(
+	'/upload_profile/:id',
+	[auth, upload.single('image')],
+	uploadProfile
+);
+router.get('/verify_email/:token', verifyEmail);
+router.post('/request_verification/:id', auth, requestEmailVerification);
+router.get('/:id', auth, getUser);
+router.post('/download_user/:id', auth, downloadUser);
+router.get('/download_profile/:id', downloadProfile);
+router.delete('/delete/:id', auth, deleteUser);
+router.put('/update/:id', [auth, upload.single('image')], updateUser);
 module.exports = router;
