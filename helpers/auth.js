@@ -24,9 +24,12 @@ const sendVerificationEmail = async (email) => {
 		expiresIn: '1h',
 	});
 
-	let user = await User.findOneAndUpdate(email, {
-		verificationToken: randomToken,
-	});
+	let user = await User.findOneAndUpdate(
+		{ email },
+		{
+			verificationToken: randomToken,
+		}
+	);
 
 	if (!user) {
 		return res.status(404).json({ errors: [{ msg: 'No user found!' }] });
