@@ -6,7 +6,8 @@ const {
 	sendVerificationEmail,
 } = require('../helpers/auth');
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const gravatar = require('gravatar');
 const nodemailer = require('nodemailer');
 const nanoid = import('nanoid');
@@ -48,7 +49,7 @@ const register = async (req, res) => {
 		return res.json({ token, user: rest });
 	} catch (error) {
 		console.error(error);
-		res.status(500).send('Server Error');
+		res.status(500).send(`Server Error ${error.message}`);
 	}
 };
 
@@ -78,7 +79,7 @@ const login = async (req, res) => {
 		return res.json({ token, user: rest });
 	} catch (error) {
 		console.error(error);
-		res.status(500).send('Server Error');
+		res.status(500).send(`Server Error ${error.message}`);
 	}
 };
 const getUser = async (req, res) => {
@@ -132,11 +133,65 @@ const forgotPassword = async (req, res) => {
 			user.save();
 			// prepare email
 			let info = await transporter.sendMail({
-				from: `"eaSt 🍟🍖" ${process.env.SENDER_EMAIL}`, // sender address
-				to: email, // list of receivers
-				subject: 'Your eaSt Password Reset Code', // Subject line
-				html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Your eaSt Password Reset Code</title>    <style>/* Add your own CSS styles here */body {font-family: Arial,sans-serif;background-color: #f0f0f0;}.container {max-width:600px; margin: 0 auto;background-color: #ffffff;padding: 20px; border-radius: 10px;}.logo {display: block; margin: 0 auto;width: 100px; height: 100px;}.logoText{	display: block;margin: 0 auto;font-size: 72px;font-weight: bold;color: #F05600;text-align: center;	text-shadow: 2px 2px #F05600;}.reset-code {font-size: 36px;font-weight: bold;color:#ff0000;           text-align: center;}.instructions {font-size: 16px;line-height: 1.5;color: #333333; }</style></head><body>
-					<div class="container"><image src = '/logo.png' alt ="eaSt logo" /><h1 class="logoText">eaSt</h1><h1>Forgot Password</h1>  <p class="instructions">You have requested to reset your password for your eaSt account. Please use the following code to verify your identity and create a new password.</p><p class="reset-code">${resetCode}</p><p class="instructions">If you did not request a password reset, please ignore this email or contact our support team if you have any questions.</p> </div></body></html>`, // html body
+				from: `"eaSt 🍟🍖" ${process.env.SENDER_EMAIL}`,
+				to: email,
+				subject: 'Your eaSt Password Reset Code',
+				html: `   <html>
+   
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Your eaSt Password Reset Code</title>
+        <style>
+            /* Add your own CSS styles here */
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f0f0f0;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #F6F6F6;
+                padding: 20px;
+                border-radius: 10px;
+            }
+            .logo {
+                display: block;
+                margin: 0 auto;
+                width: 100px;
+                height: 100px;
+            }
+            .logoText {
+                display: block;
+                margin: 0 auto;
+                font-size: 72px;
+                font-weight: bold;
+                color: #F05600;
+                text-align: center;
+                text-shadow: 2px 2px #F05600;
+            }
+            .reset-code {
+                font-size: 36px;
+                font-weight: bold;
+                color:#ff0000;
+                text-align: center;
+            }
+            .instructions {
+                font-size: 16px;
+                line-height: 1.5;
+                color: #333333;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">        
+            <h1>Forgot Password</h1>
+            <p class="instructions">You have requested to reset your password for your eaSt account. Please use the following code to verify your identity and create a new password:</p>
+            <p class="reset-code">${resetCode}</p>
+            <p class="instructions">If you did not request a password reset, please ignore this email or contact our support team if you have any questions.</p>
+        </div>
+    </body>
+    </html>`,
 			});
 
 			console.log('Message sent: %s', info.messageId);
@@ -144,7 +199,7 @@ const forgotPassword = async (req, res) => {
 			res.send({ resetCode });
 		} catch (error) {
 			console.error(error);
-			res.status(500).send('Sending email failed!');
+			res.status(500).send(`Sending email failed! ${error.message}`);
 		}
 	} catch (error) {
 		console.error(error.message);
@@ -170,16 +225,16 @@ const resetPassword = async (req, res) => {
 			// hash password
 			const hashedPassword = await hashPassword(password);
 			user.password = hashedPassword;
-			user.resetCode = '';
+			user.resetCode = null;
 			user.save();
 			return res.json({ ok: true });
 		} catch (error) {
 			console.error(error);
-			res.status(500).send('failed to reset password!');
+			res.status(500).send(`failed to reset password! ${error.message}`);
 		}
 	} catch (error) {
 		console.error(error.message);
-		res.status(500).send('Server Error');
+		res.status(500).send(`Server Error ${error.message}`);
 	}
 };
 const downloadUser = async (req, res) => {
@@ -328,7 +383,7 @@ const updatePassword = async (req, res) => {
 			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
 		}
 		res.status(500).json({
-			errors: [{ msg: `Failed to update` }],
+			errors: [{ msg: `Failed to update ${error.message}` }],
 		});
 	}
 };
@@ -353,6 +408,7 @@ const uploadProfile = async (req, res) => {
 			// Upload image to cloudinary
 			const result = await cloudinary.uploader.upload(req.file.path, {
 				folder: 'uploaded/profile_photos',
+				resource_type: 'auto',
 			});
 
 			// update user
@@ -378,9 +434,11 @@ const uploadProfile = async (req, res) => {
 	}
 };
 const verifyEmail = async (req, res) => {
-	const { token } = req.params;
 	try {
-		const user = await User.findOne({ verificationToken: token });
+		const { token } = req.params;
+		const verifiedToken = await jwt.verify(token, process.env.JWT_SECRET);
+		const { secret } = await verifiedToken;
+		const user = await User.findOne({ verificationToken: secret });
 		if (!user) {
 			return res.status(400).json({ errors: [{ msg: 'Invalid token' }] });
 		}
@@ -448,7 +506,7 @@ const downloadProfile = async (req, res) => {
 			return res.status(404).json({ errors: [{ msg: 'No User found' }] });
 		}
 		res.status(500).json({
-			errors: [{ msg: 'internal server error' }],
+			errors: [{ msg: `internal server error ${error.message}` }],
 		});
 	}
 };

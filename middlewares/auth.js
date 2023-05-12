@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const dotenv = require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 const auth = (req, res, next) => {
 	//get token from header
 	const token = req.header('x-auth-token');
@@ -18,7 +19,7 @@ const auth = (req, res, next) => {
 		next();
 	} catch (error) {
 		console.log(error);
-		res.status(401).json({ msg: 'token is not valid' });
+		res.status(401).json({ msg: `token is not valid ${error.message}` });
 	}
 };
 
