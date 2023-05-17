@@ -15,6 +15,7 @@ import {
 	updatePassword,
 	updateUser,
 	uploadProfile,
+	validateResetCode,
 	verifyEmail,
 } from '../controllers/userController.js';
 
@@ -48,7 +49,7 @@ router.post(
 router.post('/logout/:id', protect, logOutUser);
 
 // Request password reset
-router.post(
+router.get(
 	'/forgot_password',
 	[body('email').notEmpty().withMessage('Email is required')],
 	forgotPassword
@@ -58,13 +59,22 @@ router.post(
 router.post(
 	'/reset_password',
 	[
-		body('resetCode').notEmpty().withMessage('Reset Code is required'),
 		body('email').notEmpty().withMessage('Email is required'),
-		body('password')
+		body('new_password')
 			.isLength({ min: 6 })
 			.withMessage('Password must be at least 6 characters long'),
 	],
 	resetPassword
+);
+
+// Validate reset code
+router.post(
+	'/verify_resetcode',
+	[
+		body('email').notEmpty().withMessage('Email is required'),
+		body('resetCode').notEmpty().withMessage('Reset Code is required'),
+	],
+	validateResetCode
 );
 
 // Update user password

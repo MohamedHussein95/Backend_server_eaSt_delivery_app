@@ -52,7 +52,12 @@ const UserSchema = mongoose.Schema(
 			type: String,
 		},
 		resetCode: {
-			type: String,
+			code: {
+				type: String,
+			},
+			expiration: {
+				type: Date,
+			},
 		},
 	},
 	{
