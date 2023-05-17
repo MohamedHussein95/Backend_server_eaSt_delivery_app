@@ -1,10 +1,11 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import userRoute from './routes/userRoute.js';
-import { notFound, errorHandler } from './middlewares/errorMiddleware.js';
-import cors from 'cors';
-import connectDB from './config/db.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import path from 'path';
+import connectDB from './config/db.js';
+import { errorHandler, notFound } from './middlewares/errorMiddleware.js';
+import userRoute from './routes/userRoute.js';
 dotenv.config();
 
 connectDB();
@@ -21,9 +22,19 @@ app.use(express.static('public')); // Serve static files from the 'public' direc
 
 app.use('/api/users', userRoute); // Mount userRoute as middleware for '/api/users' endpoint
 
-app.get('/', (req, res) => {
-	res.status(200).send('eaSt0-auth-api Server is running'); // Respond with a simple message for the root route
-});
+if (process.env.NODE_ENV === 'production') {
+	const __dirname = path.resolve();
+
+	app.use(express.static(path.join(__dirname, 'public/index.html')));
+
+	app.get('*', (req, res) =>
+		res.sendFile(path.resolve(__dirname, 'public', 'index.html'))
+	);
+} else {
+	app.get('/', (req, res) => {
+		res.status(200).send('eaSt0-auth-api Server is running'); // Respond with a simple message for the root route
+	});
+}
 
 app.use(notFound); // Handle 404 Not Found errors
 app.use(errorHandler); // Custom error handler for other types of errors
